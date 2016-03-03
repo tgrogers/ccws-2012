@@ -1,0 +1,208 @@
+GPGPU-Sim Simulator Version 3.0.2 build $Change$
+
+This version of GPGPU-Sim works with CUDA version 3.1 and 4.0.
+
+Please see the copyright notice in the file COPYRIGHT distributed with this
+release in the same directory as this file.
+
+If you use this simulator in your research please cite:
+
+Ali Bakhoda, George Yuan, Wilson W. L. Fung, Henry Wong, Tor M. Aamodt,
+Analyzing CUDA Workloads Using a Detailed GPU Simulator, in IEEE International
+Symposium on Performance Analysis of Systems and Software (ISPASS), Boston, MA,
+April 19-21, 2009.
+
+Please sign up for the google groups page for Q&A (see gpgpu-sim.org), but note
+that use of this simulator does not imply any level of support.  Questions
+answered on a best effort basis.
+
+See Section 2 "INSTALLING, BUILDING and RUNNING GPGPU-Sim" below to get started.
+
+1. CONTRIBUTIONS and HISTORY
+
+GPGPU-Sim was created by Tor Aamodt's research group at the University of
+British Columbia.  Many students have contributed including: Wilson W.L. Fung,
+Ali Bakhoda, George Yuan, Ivan Sham, Henry Wong, Henry Tran, Andrew Turner,
+Aaron Ariel, Inderpret Singh, Tim Rogers, Jimmy Kwa, and others.
+
+GPGPU-Sim models the features of a modern graphics processor that are relevant
+to non-graphics applications.  The first version of GPGPU-Sim was used in a
+MICRO'07 paper and follow-on ACM TACO paper on dynamic warp formation. That
+version of GPGPU-Sim used the SimpleScalar PISA instruction set for functional
+simulation, and various configuration files to provide a programming model
+close to CUDA.  Creating benchmarks for the original GPGPU-Sim simulator was a
+very time consuming process.  This motivated the development an interface for
+directly running CUDA applications to leverage the growing number of
+applications being developed to use CUDA.  We subsequently added support for
+OpenCL and removed all SimpleScalar code.
+
+The interconnection network is simulated using the booksim simulator developed
+by Bill Dally's research group at Stanford.
+
+To produce output that is compatible with the output from running the same CUDA
+program on the GPU, we have implemented several PTX instructions using the CUDA
+Math library (part of the CUDA toolkit). Code to interface with the CUDA Math
+library is contained in cuda-math.h, which also includes several structures
+derived from vector_types.h (one of the CUDA header files).
+
+See file CHANGES for updates in this and earlier versions.
+
+2. INSTALLING, BUILDING and RUNNING GPGPU-Sim
+
+GPGPU-Sim was developed on SUSE  Linux(this release was tested with SUSE
+version 11.3) and has been used on several other Linux platforms (both 32-bit
+and 64-bit systems).  In principle, GPGPU-Sim should work with any linux
+distribution as long as the following software dependencies are satisfied.
+
+Step 1: Dependencies
+====================
+
+Download and install the CUDA Toolkit. It is recommended to use version 3.1
+for normal PTX simulation and version 4.0 for cuobjdump support and/or to use
+PTXPlus (Harware instruction set support). Note that it is possible to have
+multiple versions of the CUDA toolkit installed on a single system -- just
+install them in different directories and update the setup_environment script
+to point to the version you want to use.
+
+[Optional] If you want to run OpenCL on the simulator, download and install
+NVIDIA's OpenCL driver from <http://developer.nvidia.com/opencl>.  Update your
+PATH and LD_LIBRARY_PATH as indicated by the NVIDIA install scripts. Note that
+you will need to use the lib64 directory if you are using a 64bit machine.  We
+have tested OpenCL on GPGPU-Sim using NVIDIA driver version 256.40
+<http://developer.download.nvidia.com/compute/cuda/3_1/drivers/devdriver_3.1_linux_64_256.40.run>
+Note the most recent version of the NVIDIA driver produces PTX that is
+incompatible with this version of GPGPU-Sim.
+
+GPGPU-Sim dependencies:
+* gcc
+* g++
+* make
+* makedepend
+* xutils
+* bison
+* flex
+* zlib
+* libboost
+* CUDA Toolkit
+	
+GPGPU-Sim documentation dependencies:
+* doxygen
+* graphvi
+
+AerialVision dependencies:
+* python-pmw
+* python-ply
+* python-numpy
+* libpng12-dev
+* python-matplotlib
+
+We used gcc/g++ version 4.3.2 with CUDA SDK version 3.1 or 4.5.1 for later CUDA
+SDK versions. We used bison version 2.3, and flex version 2.5.33.
+
+If you are using Ubuntu, the following commands will install all required
+dependencies besides the CUDA Toolkit.
+
+GPGPU-Sim dependencies:
+"sudo apt-get install build-essential xutils-dev bison zlib1g-dev flex
+libboost-all-dev libglu1-mesa-dev"
+
+GPGPU-Sim documentation dependencies:
+"sudo apt-get install doxygen graphviz"
+
+AerialVision dependencies:
+"sudo apt-get install python-pmw python-ply python-numpy libpng12-dev
+python-matplotlib"
+
+CUDA SDK dependencies:
+"sudo apt-get install libxi-dev libxmu-dev libglut3-dev"
+
+
+Step 2: Build
+=============
+
+To build the simulator, you first need to configure how you want it to be
+built. From the root directory of the simulator, do the following:
+	
+cd v3.x
+	
+then open the file 'setup_environment' with your favorite text editor. Read
+the file carefully and modify the environment variables in that file to your
+environment specific paths. In particular, you need to set CUDA_INSTALL_PATH
+correctly. If you set CUDA_INSTALL_PATH in your .bashrc file as per the
+instructions in the cuda toolkit installation, setup_environment will detect
+that automatically, in which case, you don't need to change it in
+setup_environment. The setup_environment script is engineered to work with a
+default system setup, so in the general case you will not need to modify it,
+however, you should still read it carefully to figure out if something specific
+to your system needs to be changed. After you have edited that file, save it
+and run
+	
+source setup_environment <build_type>
+	
+replace <build_type> with debug or release. Use release if you need faster
+simulation and debug if you need to run the simulator in gdb. If nothing is
+specified, release will be used by default.
+
+Now you are ready to build the simulator, just run
+	
+make
+	
+After make is done, the simulator would be ready to use. To clean the build,
+run
+	
+make clean
+	
+To build the doxygen generated documentations, run
+	
+make docs
+	
+to clean the docs run
+	
+make cleandocs
+
+The documentation resides at doc/doxygen/html.
+
+Step 3: Run
+============
+
+Copy gpgpusim.conf and icnt_config_quadro_islip.txt from
+gpgpu-sim/v3.x/configs/QuadroFX5800/ to your application's working directory.
+These files configure the microarchitecture model of GPGPU-Sim to resemble a
+Quadro FX 5800 (GT 200).
+
+To use ptxplus (native ISA) change the following options in the configuration
+file to "1" (Note: you need CUDA version 4.0 or higher) as follows:
+
+-gpgpu_ptx_use_cuobjdump 1
+-gpgpu_ptx_convert_to_ptxplus 1
+-gpgpu_ptx_save_converted_ptxplus 1
+
+Now To run a CUDA application on the simulator, simply execute
+	
+source setup_environment <build_type>
+
+Use the same <build_type> you used while building the simulator. Then just
+launch the executable as you would if it was to run on the hardware. By
+running "source setup_environment <build_type>" you change your LD_LIBRARY_PATH
+to point to GPGPU-Sim's instead of CUDA or OpenCL runtime so that you do NOT
+need to re-compile your application simply to run it on GPGPU-Sim.
+
+To revert back to running on the hardware, remove GPGPU-Sim from your
+LD_LIBRARY_PATH environment variable.
+
+Running OpenCL applications is identical to running CUDA applications. However,
+OpenCL applications need to communicate with the NVIDIA driver in order to
+build OpenCL at runtime. GPGPU-Sim supports offloading this compilation to a
+remote machine. The hostname of this machine can be specified using the
+environment variable OPENCL_REMOTE_GPU_HOST. This variable should also be set
+through the setup_environment script. If you are offloading to a remote machine,
+you might want to setup passwordless ssh login to that machine in order to
+avoid having too retype your password for every execution of an OpenCL
+application.
+
+If you need to run the set of applications in the NVIDIA CUDA SDK code
+samples then you will need to download, install and build the SDK.
+
+3. Documentation
+
+http://gpgpu-sim.ece.ubc.ca/GPGPU-Sim_3.x_Manual
